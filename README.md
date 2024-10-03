@@ -1,3 +1,4 @@
 # AI-Trip-Planner
 [A]- Aditi Gupta
-[s]
+[c]-Chaitali Patidar
+[s]-Somi Gour
