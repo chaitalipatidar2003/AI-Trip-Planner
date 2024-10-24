@@ -53,7 +53,7 @@ function CreateTrip() {
     }, [formData])
 
     const login = useGoogleLogin({
-        onSuccess: (codeResp) => console.log(codeResp),
+        onSuccess: (codeResp) => GetUserProfile(codeResp),
         onError: (error) => console.log(error)
     })
 

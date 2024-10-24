@@ -1,12 +1,36 @@
 import { Button } from '@/components/ui/button';
-import React from 'react';
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
 import { IoIosSend } from "react-icons/io";
 
+const API_URL='https://api.unsplash.com/search/photos';
+const IMAGES_PER_PAGE=2;
 function InfoSection({ trip }) {
+
+    const [photoUrl, setPhotoUrl]=useState();
+ useEffect(()=>{
+    trip && GetPlacePhoto();
+ }, [trip])
+
+ const GetPlacePhoto=async()=>{
+   try{ const data= trip?.userSelection?.location
+    const result=await axios.get(
+        `${API_URL}?query=${data}&page=1&per_page=${IMAGES_PER_PAGE}&client_id=${
+            import.meta.env.VITE_UNSPLASH_API_KEY
+        }`
+    )
+    console.log('result' ,result.data);
+    const PhotoUrl=result.data.results[0].urls.small;
+    setPhotoUrl(PhotoUrl);
+     }catch(error){
+        console.log(error);
+     }
+ }
+
     return (
         <div>
             <img
-                src='/placeholder.png'
+                src={photoUrl}
                 alt="Trip Placeholder"
                 className='h-[340px] w-full object-cover rounded-xl'
             />
