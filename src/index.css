@@ -27,7 +27,7 @@ a:hover {
 }
 
 body {
- 
+
 }
 
 h1 {
@@ -130,4 +130,14 @@ button:focus-visible {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+body {
+  @apply w-full h-full bg-background text-foreground;
+}
+
+
+#root {
+  width: 100%;
+  max-width: 100%;
 }
