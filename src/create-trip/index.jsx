@@ -12,6 +12,7 @@ import axios from 'axios';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '@/service/firebaseConfig';
 import { useNavigate } from 'react-router-dom';
+import Chatbot from "../Chatbot";
 
 function CreateTrip() {
     const [place, setPlace] = useState("");
@@ -19,13 +20,14 @@ function CreateTrip() {
     const [error, setError] = useState('');
     const [openDialog, setOpenDialog] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [isChatbotVisible, setChatbotVisible] = useState(false); // State for Chatbot visibility
 
     const navigate = useNavigate();
 
     const handleInputChange = (name, value) => {
         if (name === 'noOfDays') {
             if (value > 10) {
-                setError('Please enter less than 5 days');
+                setError('Please enter less than 10 days');
                 return;
             } else {
                 setError('');
@@ -53,7 +55,7 @@ function CreateTrip() {
             return;
         }
 
-        if (error || formData?.noOfDays > 10 && !formData?.location || !formData?.budget || !formData?.traveler) {
+        if (error || formData?.noOfDays > 10 || !formData?.location || !formData?.budget || !formData?.traveler) {
             toast("Please fill all details.");
             return;
         }
@@ -64,29 +66,41 @@ function CreateTrip() {
             .replace('{location}', formData?.location)
             .replace('{totalDays}', formData?.noOfDays)
             .replace('{traveler}', formData?.traveler)
-            .replace('{budget}', formData?.budget)
-            .replace('{totalDays}', formData?.noOfDays);
+            .replace('{budget}', formData?.budget);
 
-        const result = await chatSession.sendMessage(FINAL_PROMPT);
-        setLoading(false);
-        SaveAiTrip(result?.response?.text());
+        try {
+            const result = await chatSession.sendMessage(FINAL_PROMPT);
+            console.log("Generated Trip Data:", result?.response?.text()); // Log the response
+            setLoading(false);
+            SaveAiTrip(result?.response?.text());
+        } catch (error) {
+            console.error("Error generating trip:", error);
+            toast("Failed to generate trip. Please try again.");
+            setLoading(false);
+        }
     };
 
     const SaveAiTrip = async (TripData) => {
         setLoading(true);
-
         const docId = Date.now().toString();
         const user = JSON.parse(localStorage.getItem('user'));
 
-        await setDoc(doc(db, "AiTrips", docId), {
-            userSelection: formData,
-            tripData: JSON.parse(TripData),
-            userEmail: user?.email,
-            id: docId
-        });
+        try {
+            const parsedTripData = JSON.parse(TripData); // Try to parse the TripData
+            await setDoc(doc(db, "AiTrips", docId), {
+                userSelection: formData,
+                tripData: parsedTripData,
+                userEmail: user?.email,
+                id: docId
+            });
 
-        setLoading(false);
-        navigate(`/view-trip/${docId}`);
+            navigate(`/view-trip/${docId}`);
+        } catch (error) {
+            console.error("Error parsing TripData:", error); // Log any errors
+            toast("Error saving trip data. Please check the format.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     const GetUserProfile = (tokenInfo) => {
@@ -100,6 +114,11 @@ function CreateTrip() {
             setOpenDialog(false);
             OnGenerateTrip();
         });
+    };
+
+    // Function to toggle Chatbot visibility
+    const toggleChatbot = () => {
+        setChatbotVisible(!isChatbotVisible);
     };
 
     return (
@@ -167,6 +186,18 @@ function CreateTrip() {
                     {loading ? <AiOutlineLoading3Quarters className='h-7 w-7 animate-spin' /> : 'Generate Trip'}
                 </Button>
             </div>
+
+            {/* Chatbot Section */}
+            {isChatbotVisible && (
+                <div className="fixed bottom-16 right-4 z-50">
+                    <Chatbot /> {/* Conditionally render Chatbot */}
+                </div>
+            )}
+
+            {/* Emoji Button to toggle Chatbot */}
+            <button onClick={toggleChatbot} className="text-2xl fixed bottom-4 right-4 bg-gray-200 rounded-full p-2 shadow-md">
+                🤖 {/* Robot emoji */}
+            </button>
 
             <Dialog open={openDialog}>
                 <DialogContent>
