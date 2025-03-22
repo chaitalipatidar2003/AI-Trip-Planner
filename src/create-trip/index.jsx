@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AI_PROMPT, SelectBudgetOptions, SelectTravelList } from '@/constants/options';
 import { chatSession } from '@/service/AIModal';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { FcGoogle } from "react-icons/fc";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
@@ -21,6 +21,9 @@ function CreateTrip() {
     const [openDialog, setOpenDialog] = useState(false);
     const [loading, setLoading] = useState(false);
     const [isChatbotVisible, setChatbotVisible] = useState(false); // State for Chatbot visibility
+
+
+    const translateButtonRef = useRef(null);
 
     const navigate = useNavigate();
 
@@ -47,6 +50,26 @@ function CreateTrip() {
         onSuccess: (codeResp) => GetUserProfile(codeResp),
         onError: (error) => console.log(error)
     });
+
+
+
+    useEffect(() => {
+        // Create Google Translate button if it doesn't exist yet
+        if (!translateButtonRef.current) {
+            translateButtonRef.current = document.createElement('div');
+            translateButtonRef.current.id = 'google_translate_element';
+            document.body.appendChild(translateButtonRef.current);
+            const script = document.createElement('script');
+            script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+            document.body.appendChild(script);
+            window.googleTranslateElementInit = () => {
+                new window.google.translate.TranslateElement(
+                    { pageLanguage: 'en' },
+                    'google_translate_element'
+                );
+            };
+        }
+    }, []);
 
     const OnGenerateTrip = async () => {
         const user = localStorage.getItem('user');
@@ -123,6 +146,10 @@ function CreateTrip() {
 
     return (
         <div className='sm:px-10 md:px-32 lg:px-56 xl:px-72 px-5 mt-10'>
+
+         <div id="google_translate_element" /> {/* Google Translate Button */}
+
+
             <h2 className='font-bold text-3xl'>Tell us about your travel preferences 🌴🏕️</h2>
             <p className='mt-3 text-gray-500 text-xl'>
                 Share your travel preferences to receive a personalized itinerary that suits your style, budget, and desired experiences.
